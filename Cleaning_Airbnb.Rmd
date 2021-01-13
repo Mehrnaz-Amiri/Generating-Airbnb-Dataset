@@ -1,0 +1,102 @@
+
+
+```{r}
+###################### BOSTON ##############################
+airbnb <- read.csv("~/Desktop/boston_listings_airbnb.csv", sep = ",", header = TRUE, stringsAsFactors=FALSE)
+# All values are none
+table(airbnb$experiences_offered)
+# Variables whose all values are NA
+colnames(airbnb)[apply(is.na(airbnb), 2, all)]
+
+########## Binary Variables ##############
+# host_is_superhost
+airbnb[airbnb$host_is_superhost != "",]$host_is_superhost <- ifelse(airbnb[airbnb$host_is_superhost != "",]$host_is_superhost == "t", 1, 0)
+# host_has_profile_pic
+airbnb[airbnb$host_has_profile_pic != "",]$host_has_profile_pic <- ifelse(airbnb[airbnb$host_has_profile_pic != "",]$host_has_profile_pic == "t", 1, 0)
+# host_identity_verified
+airbnb[airbnb$host_identity_verified != "",]$host_identity_verified <- ifelse(airbnb[airbnb$host_identity_verified != "",]$host_identity_verified == "t", 1, 0)
+# is_location_exact
+airbnb$is_location_exact <- ifelse(airbnb$is_location_exact == "t", 1, 0)
+# has_availability
+airbnb$has_availability <- ifelse(airbnb$has_availability == "t", 1, 0)
+# requires_license
+airbnb$requires_license <- ifelse(airbnb$requires_license == "t", 1, 0)
+# instant_bookable
+airbnb$instant_bookable <- ifelse(airbnb$instant_bookable == "t", 1, 0)
+# is_business_travel_ready
+airbnb$is_business_travel_ready <- ifelse(airbnb$is_business_travel_ready == "t", 1, 0)
+# require_guest_profile_picture
+airbnb$require_guest_profile_picture <- ifelse(airbnb$require_guest_profile_picture == "t", 1, 0)
+# require_guest_phone_verification
+airbnb$require_guest_phone_verification <- ifelse(airbnb$require_guest_phone_verification == "t", 1, 0)
+
+#############  property_type ##########
+airbnb$property_type <- ifelse(airbnb$property_type == "Aparthotel", "AH", ifelse(airbnb$property_type == "Apartment", "APT", ifelse(airbnb$property_type == "Barn", "BA", ifelse(airbnb$property_type == "Bed and breakfast", "BB", ifelse(airbnb$property_type == "Boat", "BO", ifelse(airbnb$property_type == "Boutique hotel", "BH", ifelse(airbnb$property_type == "Bungalow", "BU", ifelse(airbnb$property_type == "Castle", "CSL", ifelse(airbnb$property_type == "Condominium", "CND", ifelse(airbnb$property_type == "Cottage", "COT", ifelse(airbnb$property_type == "Guest suite", "GS", ifelse(airbnb$property_type == "Guesthouse", "GH", ifelse(airbnb$property_type == "Hostel", "HSL", ifelse(airbnb$property_type == "Hotel", "HTL", ifelse(airbnb$property_type == "House", "HSE", ifelse(airbnb$property_type == "Houseboat", "HB", ifelse(airbnb$property_type == "In-law", "IL", ifelse(airbnb$property_type == "Loft", "LO", ifelse(airbnb$property_type == "Other", "O", ifelse(airbnb$property_type == "Serviced apartment", "SA", ifelse(airbnb$property_type == "Townhouse", "TH", ifelse(airbnb$property_type == "Villa", "V", 0))))))))))))))))))))))
+# property_type is the type of properties for Airbnb listings. Types include: AH for Aparthotel, APT for Apartment, BA for Barn, BB for Bed and breakfast, BO for Boat, BH for Boutique hotel, BU for Bungalow, CSL for Castle, CND for Condominium, COT for Cottage, GS for Guest suite, GH for Guesthouse, HSL for Hostel, HTL for Hotel, HSE for House, HB for Houseboat, IL for In-law, LO for Loft, O for Other, SA for Serviced apartment, TH for Townhouse, and V for Villa.
+
+############ room_type ###########
+airbnb$room_type <- ifelse(airbnb$room_type == "Entire home/apt", "HA", ifelse(airbnb$room_type == "Hotel room", "HR", ifelse(airbnb$room_type == "Private room", "PR", ifelse(airbnb$room_type == "Shared room", "SR", 0))))
+# room_type is the type of Airbnb listings, which include: HA for Entire home/apt, HR for Hotel room, PR for Private room, and SR for Shared room.
+
+############ bed_type ###########
+airbnb[airbnb$bed_type != "",]$bed_type <- ifelse(airbnb[airbnb$bed_type != "",]$bed_type == "Airbed", "AB", ifelse(airbnb[airbnb$bed_type != "",]$bed_type == "Couch", "CO", ifelse(airbnb[airbnb$bed_type != "",]$bed_type == "Futon", "FU", ifelse(airbnb[airbnb$bed_type != "",]$bed_type == "Pull-out Sofa", "POS", ifelse(airbnb[airbnb$bed_type != "",]$bed_type == "Real Bed", "RB", 0)))))
+# bed_type is the type of beds in Airbnb listings. Types of bed include: AB for Airbed, CO for Couch, FU for Futon, POS for Pull-out Sofa, and RB for Real Bed.
+
+############ Save as csv ###########
+# write.csv(airbnb,"~/Desktop/boston_listings_airbnb.clean.csv", row.names = FALSE)
+
+
+######################## CAMBRIDGE ################################
+airbnb_c <- read.csv("~/Desktop/cambridge_listings_airbnb.csv", sep = ",", header = TRUE, stringsAsFactors=FALSE)
+# All values are none
+table(airbnb_c$experiences_offered)
+# Variables whose all values are NA
+colnames(airbnb_c)[apply(is.na(airbnb_c), 2, all)]
+
+########## Binary Variables ##############
+# host_is_superhost
+airbnb_c$host_is_superhost <- ifelse(airbnb_c$host_is_superhost == "t", 1, 0)
+# host_has_profile_pic
+airbnb_c$host_has_profile_pic <- ifelse(airbnb_c$host_has_profile_pic == "t", 1, 0)
+# host_identity_verified
+airbnb_c$host_identity_verified <- ifelse(airbnb_c$host_identity_verified == "t", 1, 0)
+# is_location_exact
+airbnb_c$is_location_exact <- ifelse(airbnb_c$is_location_exact == "t", 1, 0)
+# has_availability
+airbnb_c$has_availability <- ifelse(airbnb_c$has_availability == "t", 1, 0)
+# requires_license
+airbnb_c$requires_license <- ifelse(airbnb_c$requires_license == "t", 1, 0)
+# instant_bookable
+airbnb_c$instant_bookable <- ifelse(airbnb_c$instant_bookable == "t", 1, 0)
+# is_business_travel_ready
+airbnb_c$is_business_travel_ready <- ifelse(airbnb_c$is_business_travel_ready == "t", 1, 0)
+# require_guest_profile_picture
+airbnb_c$require_guest_profile_picture <- ifelse(airbnb_c$require_guest_profile_picture == "t", 1, 0)
+# require_guest_phone_verification
+airbnb_c$require_guest_phone_verification <- ifelse(airbnb_c$require_guest_phone_verification == "t", 1, 0)
+
+#############  property_type ##########
+airbnb_c$property_type <- ifelse(airbnb_c$property_type == "Apartment", "APT", ifelse(airbnb_c$property_type == "Bed and breakfast", "BB", ifelse(airbnb_c$property_type == "Bungalow", "BU", ifelse(airbnb_c$property_type == "Cabin", "CA", ifelse(airbnb_c$property_type == "Condominium", "CND", ifelse(airbnb_c$property_type == "Cottage", "COT", ifelse(airbnb_c$property_type == "Guest suite", "GS", ifelse(airbnb_c$property_type == "Guesthouse", "GH", ifelse(airbnb_c$property_type == "House", "HSE", ifelse(airbnb_c$property_type == "Loft", "LO", ifelse(airbnb_c$property_type == "Other", "O", ifelse(airbnb_c$property_type == "Serviced apartment", "SA", ifelse(airbnb_c$property_type == "Townhouse", "TH", ifelse(airbnb_c$property_type == "Villa", "V", 0))))))))))))))
+# property_type is the type of properties for Airbnb listings. Types include: APT for Apartment, BB for Bed and breakfast, BU for Bungalow, CA for Cabin, CND for Condominium, COT for Cottage, GS for Guest suite, GH for Guesthouse, HSE for House, LO for Loft, O for Other, SA for Serviced apartment, TH for Townhouse, and V for Villa.
+
+############ room_type ###########
+airbnb_c$room_type <- ifelse(airbnb_c$room_type == "Entire home/apt", "HA", ifelse(airbnb_c$room_type == "Private room", "PR", ifelse(airbnb_c$room_type == "Shared room", "SR", 0)))
+# room_type is the type of Airbnb listings, which include: HA for Entire home/apt, PR for Private room, and SR for Shared room.
+
+############ bed_type ###########
+airbnb_c$bed_type <- ifelse(airbnb_c$bed_type == "Couch", "CO", ifelse(airbnb_c$bed_type == "Futon", "FU", ifelse(airbnb_c$bed_type == "Pull-out Sofa", "POS", ifelse(airbnb_c$bed_type == "Real Bed", "RB", 0))))
+# bed_type is the type of beds in Airbnb listings. Types of bed include: CO for Couch, FU for Futon, POS for Pull-out Sofa, and RB for Real Bed.
+
+############ Save as csv ###########
+# write.csv(airbnb_c,"~/Desktop/cambridge_listings_airbnb.clean.csv", row.names = FALSE)
+```
+
+
+
+
+
+
+
+
+
+

@@ -1,0 +1,36 @@
+
+
+```{r}
+airbnb_Cambridge <- read.csv("~/Desktop/cambridge_listings_airbnb.csv", sep = ",", header = TRUE, stringsAsFactors=FALSE)
+st_crs(airbnb_Cambridge) <- st_crs(parcels_shp)
+sf_airbnb_c <- st_as_sf(airbnb_Cambridge, coords = c("longitude", "latitude"), crs = 4326)
+sf_airbnb_c <- st_transform(sf_airbnb_c , 26986)
+parcels_shp <- st_read("~/Desktop/BostonParcels2019/Parcels2019.shp")
+parcels_shp <- st_transform(parcels_shp, 26986)
+airbnb_joined_c <- st_join(sf_airbnb_c, parcels_shp, join=st_within)
+airbnb_joined_c <- st_transform(airbnb_joined_c, 4326)
+airbnb_joined_c
+airbnb_joined_c <- airbnb_joined_c %>%
+	as.data.frame() %>%
+	select(-geometry) %>%
+	cbind(st_coordinates(airbnb_joined_c))
+
+airbnb_Cambridge$Land_Parcel_ID <- airbnb_joined_c$Ln_P_ID[match(airbnb_Cambridge$id,airbnb_joined_c$id)]
+
+Airbnb_Cambridge <- left_join(airbnb_Cambridge, GI[c("Land_Parcel_ID", "Blk_ID_10", "BG_ID_10", "CT_ID_10")], by = "Land_Parcel_ID")
+
+Airbnb_Cambridge 
+
+airbnb_Cambridge$Land_Parcel_ID
+
+
+GI <- read.csv("~/Desktop/Parcel_final_cleanaddress.csv", sep = ",", header = TRUE, stringsAsFactors=FALSE)
+parcels_shp <- parcels_shp %>%
+	as.data.frame() %>%
+	select(-geometry)
+GI <- merge(parcels_shp, GI, by.x = "Ln_P_ID", by.y = "Land_Parcel_ID")
+Airbnb_Boston <- left_join(airbnb_Boston, GI[c("GIS_ID","Blk_ID_10", "BG_ID_10", "CT_ID_10")], by = 'GIS_ID')
+sum(is.na(Airbnb_Boston))
+sum(is.na(airbnb_Boston))
+```
+

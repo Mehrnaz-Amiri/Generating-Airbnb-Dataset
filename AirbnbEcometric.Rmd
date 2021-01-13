@@ -1,0 +1,280 @@
+
+
+```{r}
+                ############################
+                ###       BOSTON        ####
+                ############################
+
+# Import Airbnb dataset
+airbnb_Boston <- read.csv("~/Desktop/boston_listings_airbnb.csv", sep = ",", header = TRUE, stringsAsFactors=FALSE)
+library(sf)
+library(dplyr)
+library(tidyverse)
+library(nngeo)
+library(Hmisc)
+# Convert Airbnb dataset to sf file
+sf_airbnb <- st_as_sf(airbnb_Boston[,c("id","longitude", "latitude")], coords = c("longitude", "latitude"), crs = 4326)
+st_crs(sf_airbnb) <- 4326
+sf_airbnb <- st_transform(sf_airbnb , 26986)
+# Importing parcel shapefile
+parcels_shp <- st_read("~/Desktop/LandParcels.2020/Parcels2020_06262020.shp")
+parcels_shp <- st_transform(parcels_shp, 26986)
+# Spatial join between Airbnb dataset and parcels shapefile
+airbnb_joined <- st_join(sf_airbnb, parcels_shp, join=st_within)
+airbnb_joined <- st_transform(airbnb_joined, 4326)
+# Convert Airbnb joined file to dataframe
+airbnb_joined <- airbnb_joined %>%
+	as.data.frame() %>%
+	select(-geometry) %>%
+	cbind(st_coordinates(airbnb_joined))
+
+# Add GIS_ID and Land_Parcel_ID into Airbnb dataset
+airbnb_Boston$GIS_ID <- airbnb_joined$GIS_ID[match(airbnb_Boston$id,airbnb_joined$id)]
+airbnb_Boston$Land_Parcel_ID <- airbnb_joined$Ln_P_ID[match(airbnb_Boston$id,airbnb_joined$id)]
+# Import dataset with CT_ID_10 column
+GI <- read.csv("~/Desktop/LandParcels.2020.csv", sep = ",", header = TRUE, stringsAsFactors=FALSE)
+# Add CT_ID_10 into Airbnb dataset
+airbnb_Boston$CT_ID_10 <- GI$CT_ID_10[match(airbnb_Boston$Land_Parcel_ID,GI$Land_Parcel_ID)]
+
+# Add GIS_ID and Land_Parcel_ID into Airbnb dataset
+
+airbnb_Boston$Land_Parcel_ID <- airbnb_joined$Ln_P_ID[match(airbnb_Boston$id,airbnb_joined$id)]
+# Import dataset with CT_ID_10 column
+GI <- read.csv("~/Desktop/LandParcels.2020.csv", sep = ",", header = TRUE, stringsAsFactors=FALSE)
+# Add CT_ID_10 into Airbnb dataset
+airbnb_Boston$CT_ID_10 <- GI$CT_ID_10[match(airbnb_Boston$Land_Parcel_ID,GI$Land_Parcel_ID)]
+
+parcels_shp2$GEOID10
+j <- read.csv("~/Desktop/Properties.2020.csv", sep = ",", header = TRUE, stringsAsFactors=FALSE)
+j
+j$CT_ID_10
+match(parcels_shp2$GEOID10, j$CT_ID_10)
+
+airbnb_Boston2 <- read.csv("~/Desktop/Boston_joined_block.csv", sep = ",", header = TRUE, stringsAsFactors=FALSE)
+parcels_shp2 <- st_read("~/Desktop/State Shapefiles/CENSUS2010BLOCKS_POLY.shp")
+parcels_shp2
+airbnb_Boston$GIS_ID
+match(parcels_shp2$TRACTCE10, airbnb_Boston$CT_ID_10)
+airbnb_Boston$CT_ID_10
+airbnb_Boston <- airbnb_Boston[-c(22415 ,22416 ,22417 ,22418 ,22419 ,22420,22421),]
+airbnb_Boston2$lat <- airbnb_Boston$latitude[match(airbnb_Boston$id, airbnb_Boston2$id)]
+airbnb_Boston2$lon <- airbnb_Boston$longitude[match(airbnb_Boston$id, airbnb_Boston2$id)]
+airbnb_Boston2$new_CT <- substr(airbnb_Boston2$GEOID10, 6, 11)
+rownames(airbnb_Boston)[!(rownames(airbnb_Boston) %in% rownames(airbnb_Boston2))]
+######### NA Values ###############
+# Finding Airbnb listings that did not spatial join
+sum(is.na(airbnb_Boston$Land_Parcel_ID)) # 5922
+sum(is.na(airbnb_Boston$CT_ID_10)) # 5925
+sum(is.na(airbnb_Boston$CT_ID_10))/nrow(airbnb_Boston) # 73%
+sum(is.na(airbnb_Boston$GIS_ID) & is.na(airbnb_Boston$CT_ID_10))
+airbnb_with_NA <- airbnb_Boston[(is.na(airbnb_Boston$GIS_ID) & is.na(airbnb_Boston$CT_ID_10)),]
+
+######################################
+###   Cross Sectional Metrics       ##
+######################################
+
+######### ListingsFreq_Cross ############
+library(reshape2)
+ListingsFreq_Cross <- melt(table(airbnb_Boston$CT_ID_10),id.vars=c("airbnb_Boston$CT_ID_10"))
+names(ListingsFreq_Cross)[1] <- 'CT_ID_10'
+names(ListingsFreq_Cross)[2] <- 'ListingsFreq_Cross'
+
+#############  MedianRent_Cross ################
+# Convert price to numeric
+airbnb_Boston$price <- as.numeric(gsub('[$,]', '', airbnb_Boston$price))
+MedianRent_Cross <- aggregate(price ~ CT_ID_10, data=airbnb_Boston, median)
+names(MedianRent_Cross)[2] <- 'MedianRent_Cross'
+# Merge both MedianRent_Cross and ListingsFreq_Cross 
+cross <- merge(ListingsFreq_Cross, MedianRent_Cross, by = "CT_ID_10")
+
+
+#####################################
+###      Longitudinal Metrics      ##
+#####################################
+
+# Fiding number of listings for each month for Airbnb dataset
+table(airbnb_Boston$Month)
+
+######### ListingsFreq_January ########
+January <- airbnb_Boston[airbnb_Boston$Month == "January",]
+ListingsFreq_January <- melt(table(January$CT_ID_10),id.vars=c("January$CT_ID_10"))
+names(ListingsFreq_January)[1] <- "CT_ID_10"
+names(ListingsFreq_January)[2] <- "ListingsFreq_January"
+
+######### ListingsFreq_February ########
+February <- airbnb_Boston[airbnb_Boston$Month == "February",]
+ListingsFreq_February <- melt(table(February$CT_ID_10),id.vars=c("February$CT_ID_10"))
+names(ListingsFreq_February)[1] <- "CT_ID_10"
+names(ListingsFreq_February)[2] <- "ListingsFreq_February"
+
+######### ListingsFreq_March ########
+March <- airbnb_Boston[airbnb_Boston$Month == "March",]
+ListingsFreq_March <- melt(table(March$CT_ID_10),id.vars=c("March$CT_ID_10"))
+names(ListingsFreq_March)[1] <- "CT_ID_10"
+names(ListingsFreq_March)[2] <- "ListingsFreq_March"
+
+#######	ListingsFreq_April #########
+April <- airbnb_Boston[airbnb_Boston$Month == "April",]
+ListingsFreq_April <- melt(table(April$CT_ID_10),id.vars=c("April$CT_ID_10"))
+names(ListingsFreq_April)[1] <- "CT_ID_10"
+names(ListingsFreq_April)[2] <- "ListingsFreq_April"
+
+######	ListingsFreq_May ##########
+May <- airbnb_Boston[airbnb_Boston$Month == "May",]
+ListingsFreq_May <- melt(table(May$CT_ID_10),id.vars=c("May$CT_ID_10"))
+names(ListingsFreq_May)[1] <- "CT_ID_10"
+names(ListingsFreq_May)[2] <- "ListingsFreq_May"
+
+###### ListingsFreq_June ##########
+June <- airbnb_Boston[airbnb_Boston$Month == "June",]
+ListingsFreq_June <- melt(table(June$CT_ID_10),id.vars=c("June$CT_ID_10"))
+names(ListingsFreq_June)[1] <- "CT_ID_10"
+names(ListingsFreq_June)[2] <- "ListingsFreq_June"
+
+# Merging all months for listing frequency
+January_February <- merge(ListingsFreq_January, ListingsFreq_February, by = "CT_ID_10", all = TRUE)
+March_April <- merge(ListingsFreq_March, ListingsFreq_April, by = "CT_ID_10", all = TRUE)
+May_June <- merge(ListingsFreq_May, ListingsFreq_June, by = "CT_ID_10", all = TRUE)
+January_February_March_April <- merge(January_February, March_April, by = "CT_ID_10", all = TRUE)
+all_months <- merge(January_February_March_April, May_June, by = "CT_ID_10", all = TRUE)
+
+###### MedianRent_January #######
+MedianRent_January <- aggregate(price ~ CT_ID_10, data=January, median)
+names(MedianRent_January)[1] <- 'CT_ID_10'
+names(MedianRent_January)[2] <- 'MedianRent_January'
+
+###### MedianRent_February #######
+MedianRent_February <- aggregate(price ~ CT_ID_10, data=February, median)
+names(MedianRent_February)[1] <- 'CT_ID_10'
+names(MedianRent_February)[2] <- 'MedianRent_February'
+
+###### MedianRent_March #####
+MedianRent_March <- aggregate(price ~ CT_ID_10, data=March, median)
+names(MedianRent_March)[1] <- 'CT_ID_10'
+names(MedianRent_March)[2] <- 'MedianRent_March'
+
+###### MedianRent_April #####
+MedianRent_April <- aggregate(price ~ CT_ID_10, data=April, median)
+names(MedianRent_April)[1] <- 'CT_ID_10'
+names(MedianRent_April)[2] <- 'MedianRent_April'
+
+###### MedianRent_May ######
+MedianRent_May <- aggregate(price ~ CT_ID_10, data=May, median)
+names(MedianRent_May)[1] <- 'CT_ID_10'
+names(MedianRent_May)[2] <- 'MedianRent_May'
+
+###### MedianRent_June #####
+MedianRent_June <- aggregate(price ~ CT_ID_10, data=June, median)
+names(MedianRent_June)[1] <- 'CT_ID_10'
+names(MedianRent_June)[2] <- 'MedianRent_June'
+
+# Merging all months for median rent
+January_February <- merge(MedianRent_January, MedianRent_February, by = "CT_ID_10", all = TRUE)
+March_April <- merge(MedianRent_March, MedianRent_April, by = "CT_ID_10", all = TRUE)
+May_June <- merge(MedianRent_May, MedianRent_June, by = "CT_ID_10", all = TRUE)
+January_February_March_April <- merge(January_February, March_April, by = "CT_ID_10", all = TRUE)
+all_months_rent <- merge(January_February_March_April, May_June, by = "CT_ID_10", all = TRUE)
+
+# Merging all data together
+all <- merge(cross, all_months, by = 'CT_ID_10', all = TRUE)
+names(all)[1] <- 'CT_ID_10'
+all <- merge(all, all_months_rent, by = 'CT_ID_10', all = TRUE)
+
+# Merging with state data, which contains all CT ID
+# Importing ACS_1418_TRACT dataset
+state <- read.csv("~/Desktop/ACS_1418_TRACT.csv", sep = ",", header = TRUE, stringsAsFactors=FALSE)
+all <- left_join(all, state[c("COUNTY","MAtown","CT_ID_10")], by = 'CT_ID_10')
+names(all)[17] <- 'TOWN'
+# Replace NA values with 0 for numeric features
+colnames(all)[apply(is.na(all), 2, any)] 
+all$ListingsFreq_January[is.na(all$ListingsFreq_January)] <- 0
+all$ListingsFreq_March[is.na(all$ListingsFreq_March)] <- 0
+all$ListingsFreq_April[is.na(all$ListingsFreq_April)] <- 0
+all$ListingsFreq_May[is.na(all$ListingsFreq_May)] <- 0
+all$ListingsFreq_June[is.na(all$ListingsFreq_June)] <- 0
+all$MedianRent_January[is.na(all$MedianRent_January)] <- 0
+all$MedianRent_March[is.na(all$MedianRent_March)] <- 0
+all$MedianRent_April[is.na(all$MedianRent_April)] <- 0
+all$MedianRent_May[is.na(all$MedianRent_May)] <- 0
+all$MedianRent_June[is.na(all$MedianRent_June)] <- 0
+# Checking for NA values
+colnames(all)[apply(is.na(all), 2, any)]
+# Convert price to $
+all$MedianRent_Cross <- paste0("$",all$MedianRent_Cross)
+all$MedianRent_January <- paste0("$",all$MedianRent_January)
+all$MedianRent_February <- paste0("$",all$MedianRent_February)
+all$MedianRent_March <- paste0("$",all$MedianRent_March)
+all$MedianRent_April <- paste0("$",all$MedianRent_April)
+all$MedianRent_May <- paste0("$",all$MedianRent_May)
+all$MedianRent_June <- paste0("$",all$MedianRent_June)
+# Save as csv
+write.csv(all,"~/Desktop/AIRBNB.CT.csv", row.names = FALSE)
+
+View(airbnb_Boston$CT_ID_10)
+```
+```{r}
+airbnb_Boston$CT_ID_10
+airbnb_Boston2[airbnb_Boston2$CT_ID_10 == 100,]
+```
+
+```{r}
+h <- airbnb_Boston[airbnb_Boston$id == 95453,]
+h
+```
+
+```{r}
+
+match(airbnb_Boston$CT_ID_10, airbnb_Boston2$CT_ID_10_2)
+library(compare)
+compare(airbnb_Boston,airbnb_Boston2,allowAll=TRUE)
+sum(is.na(airbnb_Boston$CT_ID_10))
+identical(!is.na(airbnb_Boston$CT_ID_10), airbnb_Boston2$CT_ID_10_2)
+
+
+```
+```{r}
+g <- subset(airbnb_Boston, !(airbnb_Boston$CT_ID_10 %in% airbnb_Boston2$New_CT))
+g
+
+```
+
+```{r}
+View(airbnb_Boston$CT_ID_10)
+View(airbnb_Boston2$New_CT)
+View(airbnb_Boston2$CT_ID_10)
+airbnb_Boston[airbnb_Boston$CT_ID_10 == '25025990101',]
+25025990101
+airbnb_Boston2 <- read.csv("~/Desktop/Boston_joined_block.csv", sep = ",", header = TRUE, stringsAsFactors=FALSE)
+
+airbnb_Boston2$New_CT <- NA
+
+for (i in 1:nrow(airbnb_Boston2)) {
+  if (nchar(airbnb_Boston2$CT_ID_10[i]) == 3) {
+     airbnb_Boston2$New_CT[i] <- paste0("25025000", airbnb_Boston2$CT_ID_10[i])
+  } else if (nchar(airbnb_Boston2$CT_ID_10[i]) == 5) {
+    airbnb_Boston2$New_CT[i] <- paste0("250250", airbnb_Boston2$CT_ID_10[i])
+  } else 
+   airbnb_Boston2$New_CT[i] <- paste0("25025", airbnb_Boston2$CT_ID_10[i])
+}
+airbnb_Boston2$New_CT
+airbnb_Boston2
+
+table(nchar(airbnb_Boston2$New_CT))
+table(nchar(airbnb_Boston$CT_ID_10))
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

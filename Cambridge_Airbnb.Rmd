@@ -1,0 +1,234 @@
+
+```{r}
+
+                ############################
+                ###       CAMBRIDGE     ####
+                ############################
+
+airbnb_Cambridge <- read.csv("~/Desktop/Cambridge_joined_block.csv", sep = ",", header = TRUE, stringsAsFactors=FALSE)
+
+# Correcting Tract ID
+table(nchar(airbnb_Cambridge$CT_ID_10)) 
+airbnb_Cambridge$New_CT <- NA
+for (i in 1:nrow(airbnb_Cambridge)) {
+  if (nchar(airbnb_Cambridge$CT_ID_10[i]) == 6) {
+     airbnb_Cambridge$New_CT[i] <- paste0("25017", airbnb_Cambridge$CT_ID_10[i])
+  } else 
+   airbnb_Cambridge$New_CT[i] <- paste0("250170", airbnb_Cambridge$CT_ID_10[i])
+}
+
+# Checking
+table(nchar(airbnb_Cambridge$New_CT))
+table(startsWith(airbnb_Cambridge$New_CT, '25'))
+airbnb_Cambridge <- airbnb_Cambridge[,-109]
+airbnb_Cambridge <- rename(airbnb_Cambridge, CT_ID_10 = New_CT)
+airbnb_Cambridge <- rename(airbnb_Cambridge, TOWN = REALTOWN)
+airbnb_Cambridge <- rename(airbnb_Cambridge, COUNTY = COUNTYFP10)
+
+
+######################################
+###   Cross Sectional Metrics       ##
+######################################
+
+######### ListingsFreq_Cross ############
+library(reshape2)
+ListingsFreq_Cross <- melt(table(airbnb_Cambridge$CT_ID_10),id.vars=c("airbnb_Cambridge$CT_ID_10"))
+names(ListingsFreq_Cross)[1] <- 'CT_ID_10'
+names(ListingsFreq_Cross)[2] <- 'ListingsFreq_Cross'
+
+#############  MedianRent_Cross ################
+# Convert price to numeric
+airbnb_Cambridge$price <- as.numeric(gsub('[$,]', '', airbnb_Cambridge$price))
+MedianRent_Cross <- aggregate(price ~ CT_ID_10, data=airbnb_Cambridge, median)
+names(MedianRent_Cross)[2] <- 'MedianRent_Cross'
+# Merge both MedianRent_Cross and ListingsFreq_Cross 
+cross <- merge(ListingsFreq_Cross, MedianRent_Cross, by = "CT_ID_10")
+
+#####################################
+###      Longitudinal Metrics      ##
+#####################################
+
+# Fiding number of listings for each month for Airbnb dataset
+table(airbnb_Cambridge$Month)
+
+######### ListingsFreq_January ########
+January <- airbnb_Cambridge[airbnb_Cambridge$Month == "January",]
+ListingsFreq_Jan <- melt(table(January$CT_ID_10),id.vars=c("January$CT_ID_10"))
+names(ListingsFreq_Jan)[1] <- "CT_ID_10"
+names(ListingsFreq_Jan)[2] <- "ListingsFreq_Jan"
+
+######### ListingsFreq_February ########
+February <- airbnb_Cambridge[airbnb_Cambridge$Month == "February",]
+ListingsFreq_Feb <- melt(table(February$CT_ID_10),id.vars=c("February$CT_ID_10"))
+names(ListingsFreq_Feb)[1] <- "CT_ID_10"
+names(ListingsFreq_Feb)[2] <- "ListingsFreq_Feb"
+
+######### ListingsFreq_March ########
+March <- airbnb_Cambridge[airbnb_Cambridge$Month == "March",]
+ListingsFreq_Mar <- melt(table(March$CT_ID_10),id.vars=c("March$CT_ID_10"))
+names(ListingsFreq_Mar)[1] <- "CT_ID_10"
+names(ListingsFreq_Mar)[2] <- "ListingsFreq_Mar"
+
+#######	ListingsFreq_April #########
+April <- airbnb_Cambridge[airbnb_Cambridge$Month == "April",]
+ListingsFreq_Apr <- melt(table(April$CT_ID_10),id.vars=c("April$CT_ID_10"))
+names(ListingsFreq_Apr)[1] <- "CT_ID_10"
+names(ListingsFreq_Apr)[2] <- "ListingsFreq_Apr"
+
+######	ListingsFreq_May ##########
+May <- airbnb_Cambridge[airbnb_Cambridge$Month == "May",]
+ListingsFreq_May <- melt(table(May$CT_ID_10),id.vars=c("May$CT_ID_10"))
+names(ListingsFreq_May)[1] <- "CT_ID_10"
+names(ListingsFreq_May)[2] <- "ListingsFreq_May"
+
+###### ListingsFreq_June ##########
+June <- airbnb_Cambridge[airbnb_Cambridge$Month == "June",]
+ListingsFreq_Jun <- melt(table(June$CT_ID_10),id.vars=c("June$CT_ID_10"))
+names(ListingsFreq_Jun)[1] <- "CT_ID_10"
+names(ListingsFreq_Jun)[2] <- "ListingsFreq_Jun"
+
+# Merging all months for listing frequency
+January_February <- merge(ListingsFreq_Jan, ListingsFreq_Feb, by = "CT_ID_10", all = TRUE)
+March_April <- merge(ListingsFreq_Mar, ListingsFreq_Apr, by = "CT_ID_10", all = TRUE)
+May_June <- merge(ListingsFreq_May, ListingsFreq_Jun, by = "CT_ID_10", all = TRUE)
+January_February_March_April <- merge(January_February, March_April, by = "CT_ID_10", all = TRUE)
+all_months <- merge(January_February_March_April, May_June, by = "CT_ID_10", all = TRUE)
+
+###### MedianRent_January #######
+MedianRent_Jan <- aggregate(price ~ CT_ID_10, data=January, median)
+names(MedianRent_Jan)[1] <- 'CT_ID_10'
+names(MedianRent_Jan)[2] <- 'MedianRent_Jan'
+
+###### MedianRent_February #######
+MedianRent_Feb <- aggregate(price ~ CT_ID_10, data=February, median)
+names(MedianRent_Feb)[1] <- 'CT_ID_10'
+names(MedianRent_Feb)[2] <- 'MedianRent_Feb'
+
+###### MedianRent_March #####
+MedianRent_Mar <- aggregate(price ~ CT_ID_10, data=March, median)
+names(MedianRent_Mar)[1] <- 'CT_ID_10'
+names(MedianRent_Mar)[2] <- 'MedianRent_Mar'
+
+###### MedianRent_April #####
+MedianRent_Apr <- aggregate(price ~ CT_ID_10, data=April, median)
+names(MedianRent_Apr)[1] <- 'CT_ID_10'
+names(MedianRent_Apr)[2] <- 'MedianRent_Apr'
+
+###### MedianRent_May ######
+MedianRent_May <- aggregate(price ~ CT_ID_10, data=May, median)
+names(MedianRent_May)[1] <- 'CT_ID_10'
+names(MedianRent_May)[2] <- 'MedianRent_May'
+
+###### MedianRent_June #####
+MedianRent_Jun <- aggregate(price ~ CT_ID_10, data=June, median)
+names(MedianRent_Jun)[1] <- 'CT_ID_10'
+names(MedianRent_Jun)[2] <- 'MedianRent_Jun'
+
+# Merging all months for median rent
+January_February <- merge(MedianRent_Jan, MedianRent_Feb, by = "CT_ID_10", all = TRUE)
+March_April <- merge(MedianRent_Mar, MedianRent_Apr, by = "CT_ID_10", all = TRUE)
+May_June <- merge(MedianRent_May, MedianRent_Jun, by = "CT_ID_10", all = TRUE)
+January_February_March_April <- merge(January_February, March_April, by = "CT_ID_10", all = TRUE)
+all_months_rent <- merge(January_February_March_April, May_June, by = "CT_ID_10", all = TRUE)
+
+# Merging all data together
+all <- merge(cross, all_months, by = 'CT_ID_10', all = TRUE)
+names(all)[1] <- 'CT_ID_10'
+all <- merge(all, all_months_rent, by = 'CT_ID_10', all = TRUE)
+
+# Add town and county to all
+airbnb_Cambridge$CT_ID_10 <- as.numeric(airbnb_Cambridge$CT_ID_10)
+all$TOWN <- airbnb_Cambridge$TOWN[match(all$CT_ID_10, airbnb_Cambridge$CT_ID_10)]
+all$COUNTY <- airbnb_Cambridge$COUNTY[match(all$CT_ID_10, airbnb_Cambridge$CT_ID_10)]
+# Correct County names
+table(all$COUNTY)
+all$COUNTY <-  ifelse(all$COUNTY == 25, "Suffolk County", "Middlesex County")
+
+
+# Replace NA values with 0 for numeric features
+colnames(all)[apply(is.na(all), 2, any)] 
+all$ListingsFreq_Jan[is.na(all$ListingsFreq_Jan)] <- 0
+all$ListingsFreq_Feb[is.na(all$ListingsFreq_Feb)] <- 0
+all$ListingsFreq_Mar[is.na(all$ListingsFreq_Mar)] <- 0
+all$ListingsFreq_Apr[is.na(all$ListingsFreq_Apr)] <- 0
+all$ListingsFreq_May[is.na(all$ListingsFreq_May)] <- 0
+all$ListingsFreq_Jun[is.na(all$ListingsFreq_Jun)] <- 0
+all$MedianRent_Jan[is.na(all$MedianRent_Jan)] <- 0
+all$MedianRent_Feb[is.na(all$MedianRent_Feb)] <- 0
+all$MedianRent_Mar[is.na(all$MedianRent_Mar)] <- 0
+all$MedianRent_Apr[is.na(all$MedianRent_Apr)] <- 0
+all$MedianRent_May[is.na(all$MedianRent_May)] <- 0
+all$MedianRent_Jun[is.na(all$MedianRent_Jun)] <- 0
+# Checking for NA values
+colnames(all)[apply(is.na(all), 2, any)]
+# Convert price to $
+all$MedianRent_Cross <- paste0("$",all$MedianRent_Cross)
+all$MedianRent_Jan <- paste0("$",all$MedianRent_Jan)
+all$MedianRent_Feb <- paste0("$",all$MedianRent_Feb)
+all$MedianRent_Mar <- paste0("$",all$MedianRent_Mar)
+all$MedianRent_Apr <- paste0("$",all$MedianRent_Apr)
+all$MedianRent_May <- paste0("$",all$MedianRent_May)
+all$MedianRent_Jun <- paste0("$",all$MedianRent_Jun)
+
+all %>% select(ListingsFreq_Cross, MedianRent_Cross, ListingsFreq_Jan, ListingsFreq_Feb, ListingsFreq_Mar, ListingsFreq_Apr, ListingsFreq_May, ListingsFreq_Jun, MedianRent_Jan, MedianRent_Feb, MedianRent_Mar, MedianRent_Apr, MedianRent_May, MedianRent_Jun, CT_ID_10, TOWN, COUNTY) 
+ 
+# Save as csv
+write.csv(all,"~/Desktop/AIRBNB.Neighborhoods.Cambridge.csv", row.names = FALSE)
+
+######################## CAMBRIDGE ################################
+airbnb_c <- airbnb_Cambridge
+
+########## Binary Variables ##############
+# host_is_superhost
+airbnb_c$host_is_superhost <- ifelse(airbnb_c$host_is_superhost == "t", 1, 0)
+# host_has_profile_pic
+airbnb_c$host_has_profile_pic <- ifelse(airbnb_c$host_has_profile_pic == "t", 1, 0)
+# host_identity_verified
+airbnb_c$host_identity_verified <- ifelse(airbnb_c$host_identity_verified == "t", 1, 0)
+# is_location_exact
+airbnb_c$is_location_exact <- ifelse(airbnb_c$is_location_exact == "t", 1, 0)
+# has_availability
+airbnb_c$has_availability <- ifelse(airbnb_c$has_availability == "t", 1, 0)
+# requires_license
+airbnb_c$requires_license <- ifelse(airbnb_c$requires_license == "t", 1, 0)
+# instant_bookable
+airbnb_c$instant_bookable <- ifelse(airbnb_c$instant_bookable == "t", 1, 0)
+# is_business_travel_ready
+airbnb_c$is_business_travel_ready <- ifelse(airbnb_c$is_business_travel_ready == "t", 1, 0)
+# require_guest_profile_picture
+airbnb_c$require_guest_profile_picture <- ifelse(airbnb_c$require_guest_profile_picture == "t", 1, 0)
+# require_guest_phone_verification
+airbnb_c$require_guest_phone_verification <- ifelse(airbnb_c$require_guest_phone_verification == "t", 1, 0)
+
+#############  property_type ##########
+airbnb_c$property_type <- ifelse(airbnb_c$property_type == "Apartment", "APT", ifelse(airbnb_c$property_type == "Bed and breakfast", "BB", ifelse(airbnb_c$property_type == "Bungalow", "BU", ifelse(airbnb_c$property_type == "Cabin", "CA", ifelse(airbnb_c$property_type == "Condominium", "CND", ifelse(airbnb_c$property_type == "Cottage", "COT", ifelse(airbnb_c$property_type == "Guest suite", "GS", ifelse(airbnb_c$property_type == "Guesthouse", "GH", ifelse(airbnb_c$property_type == "House", "HSE", ifelse(airbnb_c$property_type == "Loft", "LO", ifelse(airbnb_c$property_type == "Other", "O", ifelse(airbnb_c$property_type == "Serviced apartment", "SA", ifelse(airbnb_c$property_type == "Townhouse", "TH", ifelse(airbnb_c$property_type == "Villa", "V", 0))))))))))))))
+# property_type is the type of properties for Airbnb listings. Types include: APT for Apartment, BB for Bed and breakfast, BU for Bungalow, CA for Cabin, CND for Condominium, COT for Cottage, GS for Guest suite, GH for Guesthouse, HSE for House, LO for Loft, O for Other, SA for Serviced apartment, TH for Townhouse, and V for Villa.
+
+############ room_type ###########
+airbnb_c$room_type <- ifelse(airbnb_c$room_type == "Entire home/apt", "HA", ifelse(airbnb_c$room_type == "Private room", "PR", ifelse(airbnb_c$room_type == "Shared room", "SR", 0)))
+# room_type is the type of Airbnb listings, which include: HA for Entire home/apt, PR for Private room, and SR for Shared room.
+
+############ bed_type ###########
+airbnb_c$bed_type <- ifelse(airbnb_c$bed_type == "Couch", "CO", ifelse(airbnb_c$bed_type == "Futon", "FU", ifelse(airbnb_c$bed_type == "Pull-out Sofa", "POS", ifelse(airbnb_c$bed_type == "Real Bed", "RB", 0))))
+# bed_type is the type of beds in Airbnb listings. Types of bed include: CO for Couch, FU for Futon, POS for Pull-out Sofa, and RB for Real Bed.
+
+########## cancellation_policy #########
+airbnb_c$cancellation_policy <- ifelse(airbnb_c$cancellation_policy == "flexible", "FLEX", ifelse(airbnb_c$cancellation_policy == "moderate", "MOD", ifelse(airbnb_c$cancellation_policy == "strict", "STR", ifelse(airbnb_c$cancellation_policy == "strict_14_with_grace_period", "STR_14", 0))))
+# cancellation_policy include: FLEX for flexible, MOD for moderate, STR for strict, and STR_14 for strict_14_with_grace_period.
+
+############ Save as csv ###########
+# write.csv(airbnb_c,"~/Desktop/cambridge_listings_airbnb.clean.csv", row.names = FALSE)
+library(dplyr)
+airbnb_c <- airbnb_c %>% select(name, summary, space, description, neighborhood_overview, notes, transit, access, interaction, house_rules, id, Year, Month, listing_url, thumbnail_url, medium_url, picture_url, xl_picture_url, property_type, room_type, accommodates, bathrooms, bedrooms, beds, bed_type, amenities, square_feet, price, weekly_price, monthly_price, security_deposit, cleaning_fee, guests_included, extra_people, minimum_nights, maximum_nights, calendar_updated, availability_30, availability_60, availability_90, availability_365, calendar_last_scraped, requires_license, license, instant_bookable, cancellation_policy, require_guest_profile_picture, require_guest_phone_verification, is_business_travel_ready, host_id, host_url, host_name, host_since, host_location, host_about, host_response_time, host_response_rate, host_acceptance_rate, host_is_superhost, host_thumbnail_url, host_picture_url, host_total_listings_count, host_verifications,	host_has_profile_pic, host_identity_verified, calculated_host_listings_count, calculated_host_listings_count_entire_homes, calculated_host_listings_count_private_rooms,	calculated_host_listings_count_shared_rooms, number_of_reviews, number_of_reviews_ltm, reviews_per_month, first_review, last_review, review_scores_rating, review_scores_accuracy,	review_scores_cleanliness, review_scores_checkin, review_scores_communication, review_scores_location, review_scores_value, latitude, longitude, street, is_location_exact, airbnb_region, CT_ID_10, TOWN, COUNTY)
+
+# Correct COUNTY
+airbnb_c$COUNTY <-  ifelse(airbnb_c$COUNTY == 17, "Middlesex County","Suffolk County")
+write.csv(airbnb_c,"~/Desktop/AIRBNB.Listing.Cambridge.csv ", row.names = FALSE)
+
+```
+```{r}
+airbnb_c
+```
+
+
+
